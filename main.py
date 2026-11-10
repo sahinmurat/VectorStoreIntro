@@ -1,16 +1,41 @@
-# This is a sample Python script.
+from dotenv import load_dotenv
+from langchain_core.documents import Document
+from langchain_chroma import Chroma
+from langchain_openai import OpenAIEmbeddings
 
-# Press Umschalt+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Strg+F8 to toggle the breakpoint.
+load_dotenv()
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+documents = [
+    Document(
+        page_content="Dogs are great companions, known for their loyalty and friendliness.",
+        metadata={"source": "mammal-pets-doc"},
+    ),
+    Document(
+        page_content="Cats are independent pets that often enjoy their own space.",
+        metadata={"source": "mammal-pets-doc"},
+    ),
+    Document(
+        page_content="Goldfish are popular pets for beginners, requiring relatively simple care.",
+        metadata={"source": "fish-pets-doc"},
+    ),
+    Document(
+        page_content="Parrots are intelligent birds capable of mimicking human speech.",
+        metadata={"source": "bird-pets-doc"},
+    ),
+    Document(
+        page_content="Rabbits are social animals that need plenty of space to hop around.",
+        metadata={"source": "mammal-pets-doc"},
+    ),
+]
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+vectorstore = Chroma.from_documents(
+    documents,
+    embedding=OpenAIEmbeddings(),
+)
+
+if __name__ == "__main__":
+    #print(vectorstore.similarity_search("cat"))
+    #print(vectorstore.similarity_search_with_score("cat"))
+    embedding = OpenAIEmbeddings().embed_query("cat")
+    print(vectorstore.similarity_search_by_vector(embedding))
