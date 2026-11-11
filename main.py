@@ -2,6 +2,12 @@ from dotenv import load_dotenv
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
+from langchain_openai import ChatOpenAI
+from langchain_core.runnables import RunnableLambda, RunnablePassthrough
+from langchain_core.prompts import ChatPromptTemplate
+
+
+
 
 load_dotenv()
 
@@ -34,8 +40,20 @@ vectorstore = Chroma.from_documents(
     embedding=OpenAIEmbeddings(),
 )
 
+retriever = RunnableLambda(vectorstore.similarity_search).bind(k=1)
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+message = """
+Answer the questions using the provided context. If the answer is not contained within the context, say "I don't know."
+{question}
+Context:
+{context}
+"""
+
+prompt = ChatPromptTemplate.from_messages([("human", message)])
+
+chain = {"context":retriever, "question":RunnablePassthrough()} | prompt | llm
+
 if __name__ == "__main__":
-    #print(vectorstore.similarity_search("cat"))
-    #print(vectorstore.similarity_search_with_score("cat"))
-    embedding = OpenAIEmbeddings().embed_query("cat")
-    print(vectorstore.similarity_search_by_vector(embedding))
+    response = chain.invoke( "What is the best pet for a beginner?")
+    print(response)
+    print(response.content)
